@@ -1,0 +1,100 @@
+[gd_scene load_steps=10 format=2]
+
+[ext_resource path="res://Sprites/Enviroment/back.png" type="Texture" id=1]
+[ext_resource path="res://Prefabs/Player.tscn" type="PackedScene" id=2]
+[ext_resource path="res://Sprites/Enviroment/cyberpunk-corridor-floor.png" type="Texture" id=3]
+[ext_resource path="res://Sprites/Enviroment/cyberpunk-corridor-wall.png" type="Texture" id=4]
+[ext_resource path="res://Sprites/Enviroment/cyberpunk-corridor-void.png" type="Texture" id=5]
+[ext_resource path="res://Prefabs/Obstacle.tscn" type="PackedScene" id=6]
+[ext_resource path="res://Scripts/WorldBarriersController.gd" type="Script" id=7]
+[ext_resource path="res://Sprites/Enviroment/cyberpunk-corridor-foreground.png" type="Texture" id=9]
+[ext_resource path="res://Scripts/GameManager.gd" type="Script" id=10]
+
+[node name="TestWorld" type="Node2D"]
+position = Vector2( -1, 0 )
+
+[node name="GameManager" type="Node2D" parent="."]
+script = ExtResource( 10 )
+
+[node name="EnemySpawnTimer" type="Timer" parent="GameManager"]
+wait_time = 3.0
+autostart = true
+
+[node name="ParallaxForeground" type="ParallaxBackground" parent="."]
+layer = 1
+
+[node name="ParallaxLayer" type="ParallaxLayer" parent="ParallaxForeground"]
+motion_scale = Vector2( 2, 1 )
+motion_mirroring = Vector2( 1000, 0 )
+
+[node name="Sprite" type="Sprite" parent="ParallaxForeground/ParallaxLayer"]
+position = Vector2( 0, -192 )
+scale = Vector2( 2.3, 2.3 )
+texture = ExtResource( 9 )
+centered = false
+
+[node name="ParallaxBackground" type="ParallaxBackground" parent="."]
+scroll_offset = Vector2( 1, 0 )
+
+[node name="Background" type="ParallaxLayer" parent="ParallaxBackground"]
+motion_scale = Vector2( 0.1, 1 )
+motion_mirroring = Vector2( 768, 0 )
+
+[node name="Sprite" type="Sprite" parent="ParallaxBackground/Background"]
+position = Vector2( 0, -256 )
+scale = Vector2( 1, 2 )
+texture = ExtResource( 1 )
+centered = false
+region_enabled = true
+region_rect = Rect2( 0, 0, 768, 176 )
+
+[node name="Wall" type="ParallaxLayer" parent="ParallaxBackground"]
+motion_mirroring = Vector2( 1009, 0 )
+
+[node name="Sprite" type="Sprite" parent="ParallaxBackground/Wall"]
+position = Vector2( 0, -192 )
+texture = ExtResource( 4 )
+centered = false
+
+[node name="Lane One" type="ParallaxLayer" parent="ParallaxBackground"]
+motion_mirroring = Vector2( 1120, 0 )
+
+[node name="Sprite" type="Sprite" parent="ParallaxBackground/Lane One"]
+texture = ExtResource( 3 )
+centered = false
+
+[node name="Lane Two" type="ParallaxLayer" parent="ParallaxBackground"]
+motion_mirroring = Vector2( 1120, 0 )
+
+[node name="Sprite" type="Sprite" parent="ParallaxBackground/Lane Two"]
+position = Vector2( -64, 64 )
+texture = ExtResource( 3 )
+centered = false
+
+[node name="Lane Three" type="ParallaxLayer" parent="ParallaxBackground"]
+motion_mirroring = Vector2( 1120, 0 )
+
+[node name="Sprite" type="Sprite" parent="ParallaxBackground/Lane Three"]
+position = Vector2( -128, 128 )
+texture = ExtResource( 3 )
+centered = false
+
+[node name="Void" type="ParallaxLayer" parent="ParallaxBackground"]
+motion_mirroring = Vector2( 1120, 0 )
+
+[node name="Sprite" type="Sprite" parent="ParallaxBackground/Void"]
+position = Vector2( -1, 192 )
+texture = ExtResource( 5 )
+centered = false
+
+[node name="Player" parent="." instance=ExtResource( 2 )]
+
+[node name="Bottom Barrier" parent="." instance=ExtResource( 6 )]
+position = Vector2( -36, 192 )
+script = ExtResource( 7 )
+
+[node name="Top Barrier" parent="." instance=ExtResource( 6 )]
+position = Vector2( -36, -64 )
+script = ExtResource( 7 )
+
+[connection signal="timeout" from="GameManager/EnemySpawnTimer" to="GameManager" method="_on_EnemySpawnTimer_timeout"]
