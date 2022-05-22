@@ -1,8 +1,11 @@
-[gd_scene load_steps=16 format=2]
+[gd_scene load_steps=19 format=2]
 
 [ext_resource path="res://Scripts/PlayerController.gd" type="Script" id=1]
 [ext_resource path="res://Sprites/Player/pixel_character_pale_blue_original.png" type="Texture" id=2]
 [ext_resource path="res://Sound Effects/shoot_sound_1.wav" type="AudioStream" id=3]
+[ext_resource path="res://Sound Effects/clickNoAmo.wav" type="AudioStream" id=4]
+[ext_resource path="res://Sound Effects/hurtPlayer.wav" type="AudioStream" id=5]
+[ext_resource path="res://Sound Effects/ammoUp.wav" type="AudioStream" id=6]
 
 [sub_resource type="AtlasTexture" id=1]
 atlas = ExtResource( 2 )
@@ -60,7 +63,9 @@ animations = [ {
 [sub_resource type="RectangleShape2D" id=12]
 extents = Vector2( 24, 24 )
 
-[node name="Player" type="Area2D"]
+[node name="Player" type="Area2D" groups=[
+"Player",
+]]
 script = ExtResource( 1 )
 
 [node name="MainCamera" type="Camera2D" parent="."]
@@ -70,20 +75,29 @@ limit_bottom = -100
 smoothing_enabled = true
 smoothing_speed = 1.0
 
+[node name="AmmoUpSound" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource( 6 )
+
 [node name="ShootSound" type="AudioStreamPlayer2D" parent="."]
 stream = ExtResource( 3 )
+
+[node name="NoAmoSound" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource( 4 )
+
+[node name="PlayerHurtSound" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource( 5 )
 
 [node name="AnimatedSprite" type="AnimatedSprite" parent="."]
 scale = Vector2( 1.5, 1.5 )
 frames = SubResource( 11 )
 animation = "idle"
+frame = 2
 playing = true
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource( 12 )
 
 [node name="CollisionCheckRay" type="RayCast2D" parent="."]
-collide_with_areas = true
 
 [node name="BulletRayCast" type="RayCast2D" parent="."]
 collision_mask = 512

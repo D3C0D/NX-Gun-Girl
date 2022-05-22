@@ -6,7 +6,17 @@ var grid_size = 64
 var state = "idle"
 # Sets the speed to interpolate between positions
 export var interpolation_speed = 3
+
+# Signals
+signal player_die()
+
+# Basic player variables
 export var player_damage = 1
+export var player_bullets = 6
+export var max_ammo = 12
+export var player_health = 3
+export var max_player_health = 3
+
 
 # Gets reference for the raycast after scene loads
 onready var ray = $CollisionCheckRay
@@ -20,6 +30,14 @@ onready var tween = $Tween
 onready var animatedSprite = $AnimatedSprite
 # Gets reference for the bullet sound
 onready var shootSound = $ShootSound
+# Gets reference for the no amo sound
+onready var no_amo_sound = $NoAmoSound
+# Gets reference for the player hurt
+onready var player_hurt_sound = $PlayerHurtSound
+# Gets reference for the player ammo up
+onready var ammo_up_sound = $AmmoUpSound
+# Gets reference for the HUD
+onready var hud = get_parent().get_node("HUD")
 
 # Sets reference for bullet hit
 onready var bullet_hit_instance = preload("res://Prefabs/Bullet-Impact.tscn")
@@ -36,20 +54,28 @@ var inputs = {
 func _ready():
 	position = position.snapped(Vector2.ONE * grid_size)
 	position += Vector2.ONE * grid_size / 2
+	hud.display_bullet_count(player_bullets)
 
-#func _process(_delta):
-#	print(bullet_distance)
-
-func _unhandled_input(event):
+func _process(_delta):
+	# Check player health
+	if player_health <= 0:
+		player_die()
+	
+	# Check to see if we need to execute any code
 	if tween.is_active() or state == "shooting":
 		return
+	
+	# Aling player to the lane
+	alig_to_lane()
+	
+	# Check for inputs and react
 	for dir in inputs:
-		if event.is_action_pressed(dir):
+		if Input.is_action_pressed(dir):
 			move(dir)
 			updateSprite(dir)
-	if event.is_action_pressed("player_shoot_left"):
+	if Input.is_action_pressed("player_shoot_left"):
 		shoot("player_move_left")
-	elif event.is_action_pressed("player_shoot_right"):
+	elif Input.is_action_pressed("player_shoot_right"):
 		shoot("player_move_right")
 
 func updateSprite(dir):
@@ -60,6 +86,13 @@ func updateSprite(dir):
 		animatedSprite.flip_h = true
 
 func shoot(dir):
+	player_bullets = clamp(player_bullets, 0, max_ammo)
+	if player_bullets == 0:
+		if !no_amo_sound.is_playing():
+			no_amo_sound.play()
+		return
+	player_bullets -= 1
+	hud.display_bullet_count(player_bullets)
 	shootSound.play()
 	state = "shooting"
 	updateSprite(dir)
@@ -76,8 +109,12 @@ func move(dir):
 	ray.force_raycast_update()
 	if !ray.is_colliding():
 		move_tween(dir)
-#		Old movement code
-#		position += inputs[dir] * grid_size
+
+func add_ammo(ammo_pack_size):
+	ammo_up_sound.play()
+	player_bullets += ammo_pack_size
+	player_bullets = clamp(player_bullets, 0, max_ammo)
+	hud.display_bullet_count(player_bullets)
 
 func move_tween(dir):
 	tween.interpolate_property(self, "position", position,
@@ -85,6 +122,13 @@ func move_tween(dir):
 	 Tween.EASE_IN_OUT)
 	tween.start()
 
+func alig_to_lane():
+	if position.y < 32:
+		position.y = 32
+	elif position.y < 96 and position.y > 32:
+		position.y = 96
+	elif position.y < 160 and position.y > 96:
+		position.y = 160
 
 func _on_AnimatedSprite_animation_finished():
 	if animatedSprite.animation == "shooting":
@@ -93,7 +137,16 @@ func _on_AnimatedSprite_animation_finished():
 
 
 func _on_Player_area_entered(area):
-	if area.walking_direction == Vector2.LEFT:
+	if !area.is_in_group("enemy"):
+		return
+	player_hurt_sound.play()
+	player_health -= 1
+	player_health = clamp(player_health, 0, max_player_health)
+	hud.display_health(player_health)
+	if position.x - area.position.x < 0: # IF IM LEFT
 		move("player_move_left")
-	elif area.walking_direction == Vector2.RIGHT:
+	else: # IF IM RIGHT
 		move("player_move_right")
+
+func player_die():
+	emit_signal("player_die")
